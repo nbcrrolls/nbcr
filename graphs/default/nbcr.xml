@@ -1,0 +1,21 @@
+<?xml version="1.0" standalone="no"?>
+
+<graph>
+
+	<description>
+	NBCR roll
+	</description>
+
+	<copyright>
+	Copyright (c) 2000 - 2014 The Regents of the University of California.
+	All rights reserved. Rocks(r) 6.2 www.rocksclusters.org
+	</copyright>
+
+	<edge from="base">
+  	    <to>nbcr</to>
+	</edge>
+	<order from="base">
+  	    <tail>nbcr</tail>
+	</order>
+
+</graph>

@@ -1,0 +1,5 @@
+ROLLNAME = nbcr
+RELEASE  = 0
+COLOR    = DarkBlue
+
+REDHAT.ROOT = $(PWD)

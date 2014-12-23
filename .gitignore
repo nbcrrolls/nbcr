@@ -1,0 +1,23 @@
+# top directories
+.rpmmacros
+BUILD/
+SOURCES/
+SPECS/
+SRPMS/
+RPMS/
+
+# bootstrap and build files
+_arch
+_distribution
+_os
+disk?/
+bootstrap.py
+build.log
+
+# *.mk files
+python.mk
+rocks*.mk
+roll*.xml
+Rolls*.mk
+Rules*.mk
+
