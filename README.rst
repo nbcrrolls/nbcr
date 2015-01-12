@@ -32,6 +32,7 @@ Development and user-related scripts are installed in : ::
     /opt/nbcr/bin/ 
     /opt/nbcr/sbin/ 
     /opt/nbcr/lib/ 
+    /opt/nbcr/devel/NBCR.mk
     /opt/modulefiles/applications/ - directory for applications environment modules
     /etc/profile.d/nbcr.[sh,csh] - environment profiles
 
