@@ -7,6 +7,6 @@ build:
 
 install::
 	/bin/mkdir -p -m 755 $(ROOT)/$(PKGROOT)
-	/bin/cp nbcr-Rules.mk $(ROOT)/$(PKGROOT)/NBCR.mk
+	/bin/cp NBCR.mk $(ROOT)/$(PKGROOT)/NBCR.mk
 
 clean::
