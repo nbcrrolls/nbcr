@@ -1,7 +1,80 @@
-# variables, targets etc that are common for NBCR rolls
+# A collection of make targets, variables and macros for making rolls. 
+# Based on SDSC's  base roll.
+#
 
 ifndef __NBCR_MK
 __NBCR_MK = yes
+
+CC = gcc
+CXX = g++
+F77 = gfortran
+FC = gfortran
+ifeq ("$(COMPILERNAME)", "intel")
+  CC = icc
+  CXX = icpc
+  F77 = ifort
+  FC = ifort
+else ifeq ("$(COMPILERNAME)", "pgi")
+  CC = pgcc
+  CXX = pgCC
+  F77 = pgf77
+  FC = pgf90
+endif
+
+BIND_MOUNT = mkdir -p -m 755 $(1) || true; mount --bind $(2) $(1)
+BIND_UMOUNT = umount $(1); rmdir -p $(1) || true
+
+CHECK_LICENSE_FILES = \
+  for F in `find license-files -mindepth 1 -type f`; do \
+    echo Checking $$F for changes; \
+    /usr/bin/cmp $$F `echo $$F | sed 's/license-files/$(SOURCE_DIR)/'` || exit 2; \
+  done
+
+DESCRIBE_CC = echo built with $(CC) $(call GET_EXE_VERSION, $(CC))
+DESCRIBE_CXX = echo built with $(CXX) $(call GET_EXE_VERSION, $(CXX))
+DESCRIBE_F77 = echo built with $(F77) $(call GET_EXE_VERSION, $(F77))
+DESCRIBE_FC = echo built with $(FC) $(call GET_EXE_VERSION, $(FC))
+DESCRIBE_PYTHON = echo built with python $(call GET_EXE_VERSION, python)
+
+DESCRIBE_PKG = echo $(NAME) $(VERSION)
+
+DESCRIBE_MPI = echo built with $(ROLLMPI) $(call GET_MODULE_VERSION, $(ROLLMPI))
+DESCRIBE_CUDA = echo built with cuda $(call GET_MODULE_VERSION, cuda)
+DESCRIBE_MKL = echo built with mkl $(call GET_MODULE_VERSION, mkl)
+
+# Macro to extract the version from running $(1) with --version
+GET_EXE_VERSION = \
+  `$(1) --version 2>&1 | perl -ne 'print($$1) and exit if m/(\d+(\.\d+)*)/'`
+
+# Macro to extract the version from the whatis text of modulefile $(1)
+GET_MODULE_VERSION = \
+  `module display $(1) 2>&1 | perl -ne 'print($$1) and exit if m/version\D*(\d+(\.\d+)*)/i'`
+
+INSTALL_LICENSE_FILES = \
+  mkdir -p -m 755 $(ROOT)/$(PKGROOT)/license-info/$(NAME); \
+  cp -r license-files/* $(ROOT)/$(PKGROOT)/license-info/$(NAME)/
+
+MODULE_LOAD_COMPILER = \
+  module load $(1) || true; \
+  echo === Compiler and version ===; \
+  $(2) --version
+
+MODULE_LOAD_PACKAGE = \
+  module load $(1) || true; \
+  echo === $(2) ===; \
+  echo $${$(strip $(2))}
+
+MODULE_LOAD_CC = $(call MODULE_LOAD_COMPILER, $(ROLLCOMPILER), $(CC))
+MODULE_LOAD_CXX = $(call MODULE_LOAD_COMPILER, $(ROLLCOMPILER), $(CXX))
+MODULE_LOAD_F77 = $(call MODULE_LOAD_COMPILER, $(ROLLCOMPILER), $(F77))
+MODULE_LOAD_FC = $(call MODULE_LOAD_COMPILER, $(ROLLCOMPILER), $(FC))
+
+MODULE_LOAD_MPI = $(call MODULE_LOAD_PACKAGE, $(ROLLMPI), MPIHOME)
+MODULE_LOAD_CUDA = $(call MODULE_LOAD_PACKAGE, cuda, CUDAHOME)
+MODULE_LOAD_MKL = $(call MODULE_LOAD_PACKAGE, mkl, MKLHOME)
+
+PKGROOT_BIND_MOUNT = $(call BIND_MOUNT, $(PKGROOT), $(ROOT)/$(PKGROOT))
+PKGROOT_BIND_UMOUNT = $(call BIND_UMOUNT, $(PKGROOT))
 
 SEDROLLOPT = \
 	  -e "s%COMPILERNAME%$(COMPILERNAME)%g" \
@@ -9,6 +82,7 @@ SEDROLLOPT = \
 	  -e "s%ROLLCOMPILER%$(ROLLCOMPILER)%g" \
 	  -e "s%ROLLMPI%$(ROLLMPI)%g" \
 	  -e "s%ROLLOPTS%$(ROLLOPTS)%g" \
+	  -e "s%ROLLNETWORK%$(ROLLNETWORK)%g" \
 	  -e "s%ROLLPY%$(ROLLPY)%g" \
 	  -e "s%VERSION%$(VERSION)%g" 
 
@@ -22,7 +96,7 @@ modulefile-install:
 	for V in $(VERSION) $(EXTRA_MODULE_VERSIONS); do \
 	  cp *.module $(ROOT)/$(PKGROOT)/$$V; \
 	  cp *.version $(ROOT)/$(PKGROOT)/.version.$$V; \
-	  $(SED) -i  $(SEDROLLOPT) -e "s%VERSION%$(V)%g"  $(ROOT)/$(PKGROOT)/.version.$$V $(ROOT)/$(PKGROOT)/$$V; \
+	  $(SED) -i $(SEDROLLOPT) -e "s%VERSION%$(V)%g"  $(ROOT)/$(PKGROOT)/.version.$$V $(ROOT)/$(PKGROOT)/$$V; \
 	done
 	ln -s $(PKGROOT)/.version.$(VERSION) $(ROOT)/$(PKGROOT)/.version
 
