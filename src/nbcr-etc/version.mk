@@ -1,6 +1,6 @@
-NAME       = nbcr-profiles
+NAME       = nbcr-etc
 VERSION    = 1
 RELEASE    = 0
-PKGROOT    = /etc/profile.d
+PKGROOT    = /etc
 
 RPM.EXTRAS = AutoReq:No
