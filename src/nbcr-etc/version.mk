@@ -1,7 +1,7 @@
-NAME       = nbcr-profiles
+NAME       = nbcr-etc
 VERSION    = 1
 RELEASE    = 0
-PKGROOT    = /etc/profile.d
+PKGROOT    = /etc
 
 GNUNAME    = gnu
 GNUVERSION = 4.4.7

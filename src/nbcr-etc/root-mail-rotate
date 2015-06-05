@@ -1,0 +1,25 @@
+#!/bin/bash
+
+# Rotate root's mail file to prevent it from growing too large
+# Save rotated files
+
+# location of saved  files
+LOGDIR=/export/logs/mail
+
+# root's mail file
+MAILFILE=/var/spool/mail/root
+
+# saved mail file name with timestamp
+DATE=`date +%Y-%m-%d`
+OLD_MAILFILE=$LOGDIR/root-mail-$DATE
+
+if [ ! -d $LOGDIR ] ; then
+   mkdir -p $LOGDIR
+fi
+
+# save current mail file
+if [ -f $MAILEFILE ] ; then
+   mv $MAILFILE $OLD_MAILFILE
+   gzip $OLD_MAILFILE
+fi
+
