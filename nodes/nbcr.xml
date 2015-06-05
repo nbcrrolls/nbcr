@@ -14,5 +14,6 @@
 	<package>nbcr-devel</package>
 	<package>nbcr-profiles</package>
 	<package>nbcr-opt</package>
+	<package cond="appliance == 'frontend'">nbcr-etc</package>
 
 </kickstart>

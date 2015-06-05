@@ -4,7 +4,6 @@ REDHAT.ROOT = $(CURDIR)/../../
 include Rules.mk
 
 MODULESFILES = $(GNUNAME).module $(GNUNAME).version
-MODULESDIR = /opt/modulefiles
 
 ADDSED = -e s%@GNUVERSION@%$(GNUVERSION)%g 
 
@@ -14,13 +13,13 @@ ADDSED = -e s%@GNUVERSION@%$(GNUVERSION)%g
 build: $(MODULESFILES)
 
 install::
-	mkdir -p -m 755 $(ROOT)/$(PKGROOT)
-	install -m 755 nbcr.*sh $(ROOT)/$(PKGROOT)
-	mkdir -p -m 755 $(ROOT)/$(MODULESDIR)/applications
-	mkdir -p -m 755 $(ROOT)/$(MODULESDIR)/compilers/$(GNUNAME)
-	install -m 644 gnu.module $(ROOT)/$(MODULESDIR)/compilers/$(GNUNAME)/$(GNUVERSION)
-	install -m 644 gnu.version $(ROOT)/$(MODULESDIR)/compilers/$(GNUNAME)/.version.$(GNUVERSION)
-	ln -s $(MODULESDIR)/compilers/$(GNUNAME)/.version.$(GNUVERSION) $(ROOT)/$(MODULESDIR)/compilers/$(GNUNAME)/.version
+	mkdir -p -m 755 $(ROOT)/etc/profile.d
+	install -m 755 nbcr.*sh $(ROOT)/etc/profile.d
+	mkdir -p -m 755 $(ROOT)/$(PKGROOT)/applications
+	mkdir -p -m 755 $(ROOT)/$(PKGROOT)/compilers/$(GNUNAME)
+	install -m 644 gnu.module $(ROOT)/$(PKGROOT)/compilers/$(GNUNAME)/$(GNUVERSION)
+	install -m 644 gnu.version $(ROOT)/$(PKGROOT)/compilers/$(GNUNAME)/.version.$(GNUVERSION)
+	ln -s $(PKGROOT)/compilers/$(GNUNAME)/.version.$(GNUVERSION) $(ROOT)/$(PKGROOT)/compilers/$(GNUNAME)/.version
 
 clean::
 	rm -rf $(MODULESFILES)

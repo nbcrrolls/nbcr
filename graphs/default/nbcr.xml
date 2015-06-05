@@ -11,9 +11,8 @@
 	All rights reserved. Rocks(r) 6.2 www.rocksclusters.org
 	</copyright>
 
-	<edge from="base">
-  	    <to>nbcr</to>
-	</edge>
+	<edge from="base" to="nbcr"/>
+
 	<order from="base">
   	    <tail>nbcr</tail>
 	</order>
