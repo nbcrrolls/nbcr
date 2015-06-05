@@ -1,0 +1,20 @@
+#%Module1.0
+##
+## gnu modulefile
+##
+## modulefiles/
+##
+proc ModulesHelp { } {
+	global gnuversion 
+
+	puts stderr "\tGNU compilers"
+	puts stderr "\tDefault GNU compilers from OS roll. Version @GNUVERSION@\n"
+}
+
+module-whatis	"GNU compilers @GNUVERSION@"
+module-whatis	"Description: default GNU compilers from OS roll"
+
+# for Tcl script use only
+set	gnuversion @GNUVERSION@
+
+
