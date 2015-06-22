@@ -1,0 +1,25 @@
+#!/bin/bash
+
+# Move older log files from /var/log 
+# to /state/partition1/logs/var
+
+# log file age
+n=30
+
+# source and destination dir 
+srcDir=/var/log
+destDir=/export/logs/var
+
+echo "Moving logs older then $n days from $srcDir to $destDir"
+
+if [ ! -d $destDir ]; then
+    mkdir -p $destDir
+fi
+
+cd $srcDir/
+Dirs=`find . -maxdepth 2 -type f -mtime +$n -name '*.gz' -print`
+for i in $Dirs; do
+  /bin/mv $i $destDir
+done
+
+echo "Done"
