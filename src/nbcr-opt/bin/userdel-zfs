@@ -1,0 +1,82 @@
+#!/bin/bash
+
+usage ()
+{
+    echo "Usage: $0 account\n"
+    echo "       This script uses original userdel command to delete a user account" 
+    echo "       and ZFS commands to delete user's ZFS filesystems"
+}
+
+setDefaults () {
+# set default values and parse command line args
+    
+    # system defaults
+    baseZFS=tank
+    spool=/var/spool/mail
+
+    # set account name 
+    account=$1 
+
+    # set zfs slices names
+    accountHome=$baseZFS/home/$account       # full path to $HOME 
+    accountScratch=$baseZFS/scratch/$account # full path to scratch 
+}
+
+deleteZfsSlice () {
+    # check if zfs filesystem exists and issue an error
+    echo "HERE zfs list $1"
+    zfs list $1 > /dev/null 2>&1
+    a=$?
+    if [ $a -ne 0 ]; then
+        echo "Filesystem $1  does not exists"
+        return 
+    fi 
+
+    # destroy zfs filesystem 
+    zfs destroy $1
+    a=$?
+    if [ $a -ne 0 ]; then
+        echo "ERROR destroying  $1"
+    fi
+}
+
+deleteMail () 
+{
+    # delete mail file
+    if [ -f $spool/$account ]; then
+        /bin/rm -rf $spool/$account
+    fi
+}
+
+deleteAcc () 
+{
+    # delete user account
+    /usr/sbin/userdel $account
+
+    # delete zfs slice for user's $HOME & scratch
+    deleteZfsSlice $accountHome
+    deleteZfsSlice $accountScratch
+
+    # delete mail
+    deleteMail 
+
+    # delete automount entries
+    deleteLine
+}
+
+deleteLine () 
+{
+    # delete user from /etc/auto.home and /etc/auto.data
+    /bin/sed -i "\%$accountHome%d" /etc/auto.home
+    /bin/sed -i "\%$accountScratch%d" /etc/auto.data
+}
+
+# check command line arguments 
+if [ $# -eq 0 ]; then
+    usage
+    exit 0
+fi
+
+setDefaults "$@"
+deleteAcc 
+

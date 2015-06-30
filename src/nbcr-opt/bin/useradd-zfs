@@ -1,0 +1,139 @@
+#!/bin/bash
+
+#account=$1 
+
+usage ()
+{
+    echo "Usage: $0 -c \"First Last user@email.address\" account\n"
+    echo "       This script uses original useradd command to create a user account" 
+    echo "       and ZFS commands to create ZFS filesystem as \$HOME."
+}
+
+setDefaults () {
+# set default values and parse command line args
+
+    # check rocks attributes are set
+    checkAttr
+    
+    # system defaults
+    baseZFS=tank
+    skel=/etc/skel
+
+    # set account name from a last argument
+    account=${!#} 
+
+    # set zfs slices names
+    accountHome=$baseZFS/home/$account       # full path to $HOME 
+    accountScratch=$baseZFS/scratch/$account # full path to scratch 
+
+    # parse command line arguments
+    while [ "$1" != "${1##[-+]}" ]; do
+      case $1 in 
+        -c) 
+            info=$2
+            shift 2
+            ;;
+        *) return 1 ;;
+      esac 
+    done
+
+}
+
+checkAttr () 
+{
+    # check if rocks attributes are set
+    server=`/opt/rocks/bin/rocks list attr | grep Info_HomeDirSrv | awk '{print $2}'`
+    if [ "$server" == "" ]; then
+        echo "ERROR: missing attribute Info_HomeDirSrv"
+        exit 1
+    fi
+
+    b=`/opt/rocks/bin/rocks list attr | grep Info_HomeDirLoc | wc -l`
+    if [ "$b" != "1" ]; then
+        echo "ERROR: missing attribute Info_HomeDirSrv"
+        exit 1
+    fi
+
+}
+
+
+createZfsSlice () {
+    # check if zfs filesystem exists and issue an error
+    zfs list $1 > /dev/null 2>&1
+    a=$?
+    if [ $a -eq 0 ]; then
+        echo "ERROR: $1 exists"
+        exit 0
+    fi 
+
+    # create zfs filesystem 
+    zfs create $1
+    a=$?
+    if [ $a -ne 0 ]; then
+        echo "ERROR creating  $1"
+        exit 1
+    fi
+
+    # set quota
+    zfs set quota=$2 $1
+    a=$?
+    if [ $a -ne 0 ]; then
+        echo "ERROR setting quota $2 for $1"
+        exit 1
+    fi
+}
+
+setZfsSlicePerms () 
+{
+    # set zfs slice ownership and permissions
+    echo "Setting ownership and permisisons for $1"
+    /bin/chown -R $account.$account $1
+    /bin/chmod o-rwx $1
+}
+
+createSSHkey () {
+    # setup access with a passwordless ssh key 
+    authDir=/$accountHome/.ssh/
+    authFile=$authDir/authorized_keys
+
+    echo "Creating ssh keys in $authDir"
+    mkdir -p $authDir
+    ssh-keygen -t dsa -P '' -f $authDir/id_dsa
+    cat $authDir/id_dsa.pub > $authFile
+    /bin/chown -R $account.$account $authDir
+    /bin/chmod 700 $authDir
+    /bin/chmod 600 $authFile
+}
+
+createAcc () 
+{
+    # create zfs slice for user's $HOME & scratch
+    createZfsSlice $accountHome 10G
+    createZfsSlice $accountScratch 100G
+
+    # create user account
+    /usr/sbin/useradd -c "$info" $account
+    /bin/cp -r $skel/.[a-z]* /$accountHome
+
+    # set permiisons on user's $HOME & scratch
+    setZfsSlicePerms /$accountHome
+    setZfsSlicePerms /$accountScratch
+
+    # set ssh keys
+    createSSHkey
+
+    # create mapping in auto.data. Assumes mount on /data
+    echo "$account $server:/$accountScratch" >> /etc/auto.data
+
+}
+
+
+# check command line arguments 
+if [ $# -eq 0 ]; then
+    usage
+    exit 0
+fi
+
+setDefaults "$@"
+createAcc 
+
