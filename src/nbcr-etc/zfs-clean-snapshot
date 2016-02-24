@@ -1,0 +1,53 @@
+#!/bin/bash
+
+PATH=/sbin:/bin:/usr/sbin:/usr/bin
+
+######### local  settings #############
+
+# local zfs pool 
+pool=tank
+homedir=home
+
+# keep  6 last snapshots, start removing from 7th
+KEEP=7 
+COMMAND="/sbin/zfs destroy -r"
+
+usage () {
+    echo "Usage: $0 [-h] [-v]"
+    echo "       Removes old snapshots for home slices" 
+    echo "       -h - shows this message "
+    echo "       -v - sdry run. Echo what will be removed without doing removal"
+
+}
+
+# sending first time
+delete_old_snapshot () {
+   # check if base slice is specified
+   if [ "$1" == "" ]; then
+       echo "Require zfs base slice as a first argument"
+       return
+   fi
+
+   # zfs slices 
+   names=`ls /$pool/$1`
+   for n in $names ;
+   do
+       slice=$pool/$1/$n
+       echo "Removing oldest snapshots for $slice"
+       /sbin/zfs list -H -t snapshot -o name -S creation -d1 $slice  | tail -n +$KEEP | xargs -n 1  $COMMAND
+
+   done
+
+}
+
+#### Run ####
+if [ $# -eq 1 ]; then
+    if [ "$1" == "-h" ]; then
+        usage
+        exit 0
+    else
+        COMMAND=echo
+    fi
+fi
+
+delete_old_snapshot "$homedir"

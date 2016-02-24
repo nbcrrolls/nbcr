@@ -1,0 +1,68 @@
+#!/bin/bash
+
+PATH=/sbin:/bin:/usr/sbin:/usr/bin
+
+######### remote settings #############
+# remote user@server
+User=root@rem-server
+
+# remote slice must exist on remote server
+remoteBase=tank/backup/local-server-name
+
+######### local  settings #############
+# local ssh args
+SSH_IDENT="-i /root/.ssh/zfs_id_dsa"
+
+# snapshot dates
+DATE=`date +%Y-%m-%d`
+DATE_PREV=`date +%Y-%m-%d -d "1 week ago"`
+
+# zfs pool and home dir base
+pool=tank
+homedir=home
+
+# sending first time
+send_first_snapshot () {
+   # check if base slice is specified
+   if [ "$1" == "" ]; then
+       echo "Require zfs slice as a first argument"
+       return
+   fi
+
+   # create local snapshot and send to a remote server
+   slice=$1
+   echo "Sending first snapshot for $slice"
+   snap=$pool/$slice@SNAPSHOT-$DATE
+   zfs snapshot $snap
+   /sbin/zfs send $snap | ssh -x -c blowfish $SSH_IDENT $User /sbin/zfs recv -F $remoteBase/$slice
+}
+
+send_increment_snapshot () {
+   # check if base slice is specified
+   if [ "$1" == "" ]; then
+       echo "Require zfs slice as a first argument"
+       return
+   fi
+   slice=$1
+   # local snapshot start and end specifications
+   prev=@SNAPSHOT-$DATE_PREV
+   snap=$pool/$slice@SNAPSHOT-$DATE
+   checkSnapExist=`zfs list -H -t snapshot -o name -S creation -d1  $pool/$slice`
+   if [ "$checkSnapExist" == "" ] ; then
+       # first snapshot
+       send_first_snapshot "$slice"
+   else
+       echo "Sending incremental $snap for $slice"
+       zfs snapshot $snap
+       /sbin/zfs send -I $prev $snap | ssh -x -c blowfish $SSH_IDENT $User /sbin/zfs recv -F $remoteBase/$slice
+   fi
+}
+
+#### Run ####
+# zfs slices 
+names=`ls /$pool/$homedir`
+
+for n in $names ; do
+    send_increment_snapshot "$homedir/$n"
+done
+
