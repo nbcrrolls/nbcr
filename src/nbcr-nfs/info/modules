@@ -1,0 +1,30 @@
+
+All applicaitons environment is set using modules.
+From the list of available modules load modules needed by your application.
+
+In general, modules that require other modules load them as a prerequisite
+so that no extra loading will be implicitely needed. Applications modules 
+loading must be done in SGE submit script or on a command line.
+
+To list available modules :
+    module avail
+
+To load needed modules:
+    Example 1. load for amber14 compiled with gnu compiler:
+        module load amber14/gnu  
+
+    Example 2. load for matlab
+        module load matlab
+
+To list loaded modules:
+        module list
+
+To unload a module:
+        module unload matlab
+
+Unloading is only needed if switching  for differently compiled versions of the same application
+or if the previously loaded moduules conflict with a  new needed.
+
+For more info run: 
+        man module
+

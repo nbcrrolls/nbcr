@@ -1,0 +1,24 @@
+#!/bin/bash
+#$ -V
+#$ -e amber-suit.e 
+#$ -o amber-suit.o 
+#$ -cwd
+#$ -S /bin/bash
+#$ -q gpu
+#$ -l gpu=4
+#$ -pe orte 4
+
+# this example reqeusts 4 cpus and 4 gpus
+# the required switches are above last 3 lines
+
+# load the needed enviornment
+module load amber14/gnu
+
+# WORKAROUND to find free GPUs
+# note number in the line below equals number of GPUs used in -l gpu line above
+export CUDA_VISIBLE_DEVICES=`/share/apps/bin/showVisGpu 4`
+
+# run your amber commands (cd to directory with input files)
+cd $HOME/amber-run1 
+$AMBERHOME/bin/pmemd.cuda -O -i mdin.GPU -o mdout.1GPU -inf mdinfo.1GPU -x mdcrd.1GPU -r restrt.1GPU
+

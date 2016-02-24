@@ -1,0 +1,15 @@
+#!/bin/bash
+
+acc=`whoami`
+port=${acc:4:2}
+
+if [ "$acc" == "npw" ]; then
+    port=25
+fi
+if [ "$acc" == "yin" ]; then
+    port=26
+fi
+
+echo "Using display :$port for vnc"
+rocks run host compute-0-1 command="vncserver :$port"
+
